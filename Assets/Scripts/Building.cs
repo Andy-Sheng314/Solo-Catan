@@ -1,16 +1,14 @@
 using UnityEngine;
 
-public class Building : MonoBehaviour
+public enum Spin { up, down };
+[RequireComponent(typeof(Renderer))]
+public class Building : Buildable
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [SerializeField] private Spin spin;
 
-    // Update is called once per frame
-    void Update()
+    public override void Init(HexPos hex_pos_in)
     {
-        
+        base.Init(hex_pos_in);
+        spin = (hex_pos.q % 6 == 2) ? Spin.down : Spin.up;
     }
 }

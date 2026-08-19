@@ -1,16 +1,19 @@
 using UnityEngine;
 
-public class Road : MonoBehaviour
+public enum Axis { q, r, s };
+[RequireComponent(typeof(Renderer))]
+public class Road : Buildable
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [SerializeField] private Axis axis;
 
-    // Update is called once per frame
-    void Update()
+    public override void Init(HexPos hex_pos_in)
     {
-        
+        base.Init(hex_pos_in);
+        if (hex_pos.q % 6 == 0)
+            axis = Axis.q;
+        else if (hex_pos.r % 6 == 0)
+            axis = Axis.r;
+        else
+            axis = Axis.s;
     }
 }

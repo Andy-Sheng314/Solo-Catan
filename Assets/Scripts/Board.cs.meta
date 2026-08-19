@@ -1,2 +1,14 @@
 fileFormatVersion: 2
 guid: d10206ee0415f8648beabbf6ec67e4e5
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - hex_obj: {fileID: 2722939015886402146, guid: f6effcdc48b1cdf4fbe0be8133a0bb5e, type: 3}
+  - road_obj: {fileID: 4906778645718055838, guid: d6cb190cb7b0c384fae4273f655c9024, type: 3}
+  - building_obj: {fileID: 7807793043079164898, guid: 776435989bef65340a9f9eae446bfb57, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

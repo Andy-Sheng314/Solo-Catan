@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TileType { Water, Wheat, Stone, Brick };
+public enum TileType { Water, Wheat, Wood, Ore, Sheep, Brick };
 public class HexPos { 
     public int q, r; 
     public HexPos(int q_in, int r_in)
@@ -14,13 +14,16 @@ public class HexPos {
 
 [RequireComponent(typeof(Transform))]
 public class Board : MonoBehaviour
-{       
+{
     private Dictionary<TileType, int> inventory = new();
     private Dictionary<HexPos, Hex> board = new();
 
-    [SerializeField] private GameObject hex_tile;
-    [SerializeField] private GameObject road;
-    [SerializeField] private GameObject building;
+    private Dictionary<HexPos, Buildable> built = new();
+    private Dictionary<HexPos, Buildable> adjs = new();
+
+    [SerializeField] private GameObject hex_obj;
+    [SerializeField] private GameObject road_obj;
+    [SerializeField] private GameObject building_obj;
 
     public int R = 2;
     public float scale = 1.0f; // size of tiles
@@ -34,10 +37,15 @@ public class Board : MonoBehaviour
             inventory.Add((TileType) type, 0);
         }
         
-        // initialize game pieces
+        // initialize hexes
         InstantiateHexes();
-        InstantiateRoads();
-        InstantiateBuildings();
+
+        // build first building
+        build(new HexPos(2, -4));
+        build(new HexPos(3, -3));
+        
+        // InstantiateRoads();
+        // InstantiateBuildings();
     }
 
     void InstantiateHexes()
@@ -52,19 +60,13 @@ public class Board : MonoBehaviour
                     HexPos hex_pos = new(6*q, 6*r);
                     Vector3 pixel_pos = CalcPixelPos(hex_pos);
 
-                    GameObject instance = Instantiate(hex_tile, 
+                    GameObject instance = Instantiate(hex_obj, 
                                           pixel_pos, 
                                           Quaternion.identity,
                                           GetComponent<Transform>());
                     Hex hex = instance.GetComponent<Hex>();
                     board.Add(hex_pos, hex);
                     
-                    // just for fun
-                    // System.Random rand = new System.Random();
-                    // Color rand_colour = new Color((float)rand.NextDouble(), 
-                    //                              (float)rand.NextDouble(),
-                    //                              (float)rand.NextDouble());
-
                     // check if border
                     if (Math.Abs(q) < R && Math.Abs(r) < R && Math.Abs(s) < R)
                         hex.Init(hex_pos, TileType.Wheat, 
@@ -75,6 +77,40 @@ public class Board : MonoBehaviour
                 }
             }
         }
+    }
+
+    // Requires: valid hex position without existing piece
+    // Modifies: built, adjs
+    // Effects: adds piece to built, removes from adjs, 
+    //          updates adjs with new targets
+    void build(HexPos hex_pos)
+    {
+        Buildable new_piece;
+        Vector3 pixel_pos = CalcPixelPos(hex_pos);
+
+        // determine object type
+        if (hex_pos.q % 3 == 0)
+        {
+            // road
+            new_piece = Instantiate(road_obj, 
+                                    pixel_pos, 
+                                    Quaternion.identity,
+                                    GetComponent<Transform>())
+                                    .GetComponent<Road>();
+        } 
+        else
+        {
+            // building
+            new_piece = Instantiate(building_obj, 
+                                    pixel_pos, 
+                                    Quaternion.identity,
+                                    GetComponent<Transform>())
+                                    .GetComponent<Road>();
+        }
+        adjs.Remove(hex_pos);
+        built.Add(hex_pos, new_piece);
+
+        // update adjacent
     }
 
     void InstantiateRoads()
@@ -90,7 +126,7 @@ public class Board : MonoBehaviour
                     HexPos hex_pos = new(3*q, 3*r);
                     Vector3 pixel_pos = CalcPixelPos(hex_pos);
 
-                    Instantiate(road, pixel_pos, Quaternion.identity, 
+                    Instantiate(road_obj, pixel_pos, Quaternion.identity, 
                                 GetComponent<Transform>());
                 }
             }
@@ -109,7 +145,7 @@ public class Board : MonoBehaviour
                     HexPos hex_pos = new(2*q, 2*r);
                     Vector3 pixel_pos = CalcPixelPos(hex_pos);
 
-                    Instantiate(building, pixel_pos, Quaternion.identity, 
+                    Instantiate(building_obj, pixel_pos, Quaternion.identity, 
                                 GetComponent<Transform>());
                 }
             }
