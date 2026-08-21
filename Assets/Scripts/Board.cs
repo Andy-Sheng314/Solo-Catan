@@ -3,23 +3,45 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public enum TileType { Water, Wheat, Wood, Ore, Sheep, Brick };
-public class HexPos { 
-    public int q, r; 
+public class HexPos : IEquatable<HexPos> { 
+    public readonly int q, r; 
     public HexPos(int q_in, int r_in)
     {
         q = q_in;
         r = r_in;
+    }
+
+    public bool Equals(HexPos other)
+    {
+        return q == other.q && r == other.r;
+    }
+
+    public static HexPos operator +(HexPos a, HexPos b)
+    {
+        return new HexPos(a.q + b.q, a.r + b.r);
     }
 };
 
 [RequireComponent(typeof(Transform))]
 public class Board : MonoBehaviour
 {
-    private Dictionary<TileType, int> inventory = new();
-    private Dictionary<HexPos, Hex> board = new();
+    private readonly HexPos[][] ROAD_ADJS =
+    {
+        /* q */ new HexPos[] { new(-2, +1), new(+2, -1), 
+                               new(-3, +3), new(-3,  0), 
+                               new(+3, -3), new(+3,  0) },
+        /* r */ new HexPos[] { new(+1, -2), new(-1, +2), 
+                               new( 0, +3), new(+3, -3), 
+                               new(-3, +3), new( 0, -3) },
+        /* s */ new HexPos[] { new(+1, +1), new(-1, -1), 
+                               new(-3,  0), new( 0, +3), 
+                               new(+3,  0), new( 0, -3) }
+    };
 
-    private Dictionary<HexPos, Buildable> built = new();
-    private Dictionary<HexPos, Buildable> adjs = new();
+    private readonly Dictionary<TileType, int> inventory = new();
+    private readonly Dictionary<HexPos, Hex> board = new();
+
+    private readonly Dictionary<HexPos, Buildable> pieces = new();
 
     [SerializeField] private GameObject hex_obj;
     [SerializeField] private GameObject road_obj;
@@ -41,8 +63,16 @@ public class Board : MonoBehaviour
         InstantiateHexes();
 
         // build first building
-        build(new HexPos(2, -4));
-        build(new HexPos(3, -3));
+        // Build(new HexPos(2, -4));
+        // Build(new HexPos(-2, 4));
+        Build(new HexPos(3, 3));
+        Build(new HexPos(0, 3));
+        Build(new HexPos(-3, -3));
+        // Adj(new HexPos(6, 0));
+        // Adj(new HexPos(0, -6));
+        // Adj(new HexPos(-6, 0));
+        // Build(new HexPos(3, -3));
+        // Build(new HexPos(-3, 0));
         
         // InstantiateRoads();
         // InstantiateBuildings();
@@ -59,7 +89,7 @@ public class Board : MonoBehaviour
                 {
                     HexPos hex_pos = new(6*q, 6*r);
                     Vector3 pixel_pos = CalcPixelPos(hex_pos);
-
+                    
                     GameObject instance = Instantiate(hex_obj, 
                                           pixel_pos, 
                                           Quaternion.identity,
@@ -79,11 +109,7 @@ public class Board : MonoBehaviour
         }
     }
 
-    // Requires: valid hex position without existing piece
-    // Modifies: built, adjs
-    // Effects: adds piece to built, removes from adjs, 
-    //          updates adjs with new targets
-    void build(HexPos hex_pos)
+    void Adj(HexPos hex_pos)
     {
         Buildable new_piece;
         Vector3 pixel_pos = CalcPixelPos(hex_pos);
@@ -105,12 +131,40 @@ public class Board : MonoBehaviour
                                     pixel_pos, 
                                     Quaternion.identity,
                                     GetComponent<Transform>())
-                                    .GetComponent<Road>();
+                                    .GetComponent<Building>();
         }
-        adjs.Remove(hex_pos);
-        built.Add(hex_pos, new_piece);
+        pieces.Add(hex_pos, new_piece);
+        new_piece.Init(hex_pos);
+    }
 
-        // update adjacent
+    // Requires: valid hex position without existing piece
+    // Modifies: built, adjs
+    // Effects: adds piece to built, removes from adjs, 
+    //          updates adjs with new targets
+    void Build(HexPos hex_pos)
+    {
+        // if piece does not current exist, add it
+        if (!pieces.ContainsKey(hex_pos)) Adj(hex_pos);
+
+        Buildable piece = pieces[hex_pos];
+        if (!piece.IsBuilt())
+        {
+            // toggle state
+            piece.Build();
+
+            // update adjacent
+            if (piece is Road road)
+            {
+                foreach (HexPos delta in ROAD_ADJS[(int) road.getAxis()])
+                {
+                    HexPos new_hex_pos = hex_pos + delta;
+                    if (!pieces.ContainsKey(new_hex_pos)) Adj(new_hex_pos);
+                }
+            } else
+            {
+                Debug.Log("Implementation for Buildings in progress");
+            }
+        }
     }
 
     void InstantiateRoads()
@@ -154,14 +208,13 @@ public class Board : MonoBehaviour
 
     Vector3 CalcPixelPos(HexPos hex_pos)
     {
-        float x = (scale + padding) * (float)(Math.Sqrt(3) * hex_pos.q 
-                    + Math.Sqrt(3) / 2 * hex_pos.r) / 1.5f / 6f;
-        float y = (scale + padding) * hex_pos.r / 6f;
-        return new Vector3(x, y, 0);
+        float x = (float)(Math.Sqrt(3) * hex_pos.q  +  
+                          Math.Sqrt(3) / 2 * hex_pos.r);
+        float y = 3f/2 * hex_pos.r;
+        x *= scale/8f;
+        y *= scale/8f;
+
+        return new Vector3(x, -y, 0);
     }
 
-    void Update()
-    {
-        
-    }
 }

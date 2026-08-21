@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public enum Axis { q, r, s };
+public enum Axis { q = 0, r, s };
+
 [RequireComponent(typeof(Renderer))]
 public class Road : Buildable
 {
@@ -15,5 +16,8 @@ public class Road : Buildable
             axis = Axis.r;
         else
             axis = Axis.s;
+        Debug.Log(axis);
     }
+
+    public Axis getAxis() { return axis; }
 }

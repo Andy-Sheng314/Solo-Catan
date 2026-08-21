@@ -9,6 +9,6 @@ public class Building : Buildable
     public override void Init(HexPos hex_pos_in)
     {
         base.Init(hex_pos_in);
-        spin = (hex_pos.q % 6 == 2) ? Spin.down : Spin.up;
+        spin = ((hex_pos.q - 2) % 6 == 0) ? Spin.up : Spin.down;
     }
 }
