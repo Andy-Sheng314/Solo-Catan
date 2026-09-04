@@ -19,5 +19,5 @@ public class Road : Buildable
         Debug.Log(axis);
     }
 
-    public Axis getAxis() { return axis; }
+    public Axis GetAxis() { return axis; }
 }

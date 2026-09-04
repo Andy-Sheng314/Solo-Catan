@@ -38,6 +38,12 @@ public class Board : MonoBehaviour
                                new(+3,  0), new( 0, -3) }
     };
 
+    private readonly HexPos[][] BUILDING_ADJS =
+    {
+        /* ^ */ new HexPos[] { new(+1, -2), new(-2, +1), new(+1, +1)},
+        /* v */ new HexPos[] { new(-1, -1), new(+2, -1), new(-1, +2)}
+    };
+
     private readonly Dictionary<TileType, int> inventory = new();
     private readonly Dictionary<HexPos, Hex> board = new();
 
@@ -61,18 +67,6 @@ public class Board : MonoBehaviour
         
         // initialize hexes
         InstantiateHexes();
-
-        // build first building
-        // Build(new HexPos(2, -4));
-        // Build(new HexPos(-2, 4));
-        Build(new HexPos(3, 3));
-        Build(new HexPos(0, 3));
-        Build(new HexPos(-3, -3));
-        // Adj(new HexPos(6, 0));
-        // Adj(new HexPos(0, -6));
-        // Adj(new HexPos(-6, 0));
-        // Build(new HexPos(3, -3));
-        // Build(new HexPos(-3, 0));
         
         // InstantiateRoads();
         // InstantiateBuildings();
@@ -155,14 +149,19 @@ public class Board : MonoBehaviour
             // update adjacent
             if (piece is Road road)
             {
-                foreach (HexPos delta in ROAD_ADJS[(int) road.getAxis()])
+                foreach (HexPos delta in ROAD_ADJS[(int) road.GetAxis()])
                 {
                     HexPos new_hex_pos = hex_pos + delta;
                     if (!pieces.ContainsKey(new_hex_pos)) Adj(new_hex_pos);
                 }
-            } else
+            } else if (piece is Building building)
             {
-                Debug.Log("Implementation for Buildings in progress");
+                foreach (HexPos delta in 
+                         BUILDING_ADJS[(int) building.GetSpin()])
+                {
+                    HexPos new_hex_pos = hex_pos + delta;
+                    if (!pieces.ContainsKey(new_hex_pos)) Adj(new_hex_pos);
+                }
             }
         }
     }
